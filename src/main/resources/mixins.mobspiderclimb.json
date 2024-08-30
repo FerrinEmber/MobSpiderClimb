@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "io.github.ferrinember.mobspiderclimb.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.mobspiderclimb.refmap.json",
+  "mixins": [
+    "MobMixin"
+  ],
+  "client": [
+  ],
+  "minVersion": "0.8"
+}
