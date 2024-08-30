@@ -1,16 +1,16 @@
 package io.github.ferrinember.mobspiderclimb.mixin;
 
 import io.github.ferrinember.mobspiderclimb.Config;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.ClimberPathNavigator;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.world.World;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,16 +20,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-@Mixin(MobEntity.class)
-public abstract class MobMixin extends LivingEntity {
+@Mixin(Mob.class)
+public abstract class MobMixin extends LivingEntity{
 
-    @Shadow public abstract PathNavigator getNavigation();
+    @Shadow public abstract PathNavigation getNavigation();
 
-    @Shadow protected abstract PathNavigator createNavigation(World pLevel);
+    @Shadow protected abstract PathNavigation createNavigation(Level pLevel);
 
-    @Shadow protected PathNavigator navigation;
+    @Shadow protected PathNavigation navigation;
 
-    protected MobMixin(EntityType<? extends LivingEntity> pEntityType, World pLevel) {
+    protected MobMixin(EntityType<? extends LivingEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
@@ -38,12 +38,12 @@ public abstract class MobMixin extends LivingEntity {
         if (!this.level.isClientSide) {
             if (((Config.climbingMobsAllowlist.contains(this.getType()) && !Config.useAllowlistAsBanlist) || (!Config.climbingMobsAllowlist.contains(this.getType()) && Config.useAllowlistAsBanlist)) && (this.getTags().contains(Config.climbingTag) || Objects.equals(Config.climbingTag, ""))) {
                 this.setClimbing(this.horizontalCollision);
-                if (!(this.getNavigation() instanceof GroundPathNavigator)) {
+                if (!(this.getNavigation() instanceof WallClimberNavigation)) {
                     this.navigation = this.createNavigation(this.level);
                 }
             }
             else{
-                if ((this.getNavigation() instanceof ClimberPathNavigator) && !(this.createNavigation(this.level) instanceof ClimberPathNavigator)) {
+                if ((this.getNavigation() instanceof WallClimberNavigation) && !(this.createNavigation(this.level) instanceof WallClimberNavigation)) {
                     this.navigation = this.createNavigation(this.level);
                 }
             }
@@ -55,15 +55,15 @@ public abstract class MobMixin extends LivingEntity {
         this.entityData.define(DATA_FLAGS_ID, (byte)0);
     }
 
-    private static final DataParameter<Byte> DATA_FLAGS_ID = EntityDataManager.defineId(MobEntity.class, DataSerializers.BYTE);
+    private static final EntityDataAccessor<Byte> DATA_FLAGS_ID = SynchedEntityData.defineId(Mob.class, EntityDataSerializers.BYTE);
 
     @Inject(method = "createNavigation", at = @At(value = "HEAD"), cancellable = true)
-    private void addCreateNavigation(World pLevel, CallbackInfoReturnable<PathNavigator> cir) {
+    private void addCreateNavigation(Level pLevel, CallbackInfoReturnable<PathNavigation> cir) {
         if (((Config.climbingMobsAllowlist.contains(this.getType()) && !Config.useAllowlistAsBanlist) || (!Config.climbingMobsAllowlist.contains(this.getType()) && Config.useAllowlistAsBanlist)) && (this.getTags().contains(Config.climbingTag)) || Objects.equals(Config.climbingTag, "")) {
-            cir.setReturnValue(new ClimberPathNavigator( (MobEntity) (Object) this,pLevel));
+            cir.setReturnValue(new WallClimberNavigation( (Mob) (Object) this,pLevel));
         }
         else {
-            cir.setReturnValue(new GroundPathNavigator( (MobEntity) (Object) this,pLevel));
+            cir.setReturnValue(new GroundPathNavigation( (Mob) (Object) this,pLevel));
         }
     }
 

@@ -1,13 +1,12 @@
 package io.github.ferrinember.mobspiderclimb;
 
 
-import com.google.common.collect.ImmutableList;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
@@ -26,7 +25,7 @@ public class Config
                     "Only actually works with mobs that natively use the default ground navigation AI, which thankfully is most mobs, but flying mobs like phantoms, swimming mobs like guardians, and bouncing mobs like slimes won't be affected if added.\n" +
                     "Modded mobs may work as well, just be sure to use lead with the mod namespace! I.e. \"modname:mobname\", like you would use if you created it with the 'summon' command. If it doesn't work, it's likely that the mob doesn't use the ground navigation AI.\n" +
                     "If you notice your config resetting to default, that probably means you've given it invalid mob names. Double check spelling, and ensure you that \"modname:mobname\" also works with the summon command!")
-            .defineList("climbingMobsAllowlist", ImmutableList.of("minecraft:zombie", "minecraft:drowned", "minecraft:husk", "minecraft:zombie_villager"), Config::validateMobName);
+            .defineList("climbingMobsAllowlist", List.of("minecraft:zombie", "minecraft:drowned", "minecraft:husk", "minecraft:zombie_villager"), Config::validateMobName);
 
     private static final ForgeConfigSpec.ConfigValue<String> CLIMBING_TAG = BUILDER
             .comment("\nNBTTag required for mob to use climbing behavior. Leave as empty double quotes (default) to not require a tag. For example, a value of \"canClimb\" would mean that only mobs with the \"canClimb\" nbt tag could climb, such as those summoned with the command...\n" +
@@ -45,11 +44,11 @@ public class Config
 
     private static boolean validateMobName(final Object obj)
     {
-        return obj instanceof String && ForgeRegistries.ENTITIES.containsKey(new ResourceLocation(obj.toString()));
+        return obj instanceof final String mobName && ForgeRegistries.ENTITIES.containsKey(new ResourceLocation(mobName));
     }
 
     @SubscribeEvent
-    static void onLoad(final ModConfig.ModConfigEvent event)
+    static void onLoad(final ModConfigEvent event)
     {
         climbingMobsAllowlist = CLIMBING_MOBS.get().stream()
                 .map(mobName -> ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobName)))
