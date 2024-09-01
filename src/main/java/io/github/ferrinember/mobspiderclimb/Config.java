@@ -22,7 +22,7 @@ public class Config
     // a list of strings that are treated as resource locations for items
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> CLIMBING_MOBS = BUILDER
             .comment("A list of mobs (hostile, passive, you name it) to allow to use climbing behavior.")
-            .comment("Only actually works with mobs that natively use the default ground navigation AI, which thankfully is most mobs, but flying mobs like phantoms, swimming mobs like guardians, and bouncing mobs like slimes won't be affected if added.")
+            .comment("Only actually works with mobs that natively use the default ground navigation AI, which thankfully is most mobs, but flying mobs like phantoms, floating mobs like guardians, and bouncing mobs like slimes won't be affected if added.")
             .comment("Modded mobs may work as well, just be sure to use lead with the mod namespace! I.e. \"modname:mobname\", like you would use if you created it with the 'summon' command. If it doesn't work, it's likely that the mob doesn't use the ground navigation AI.")
             .comment("If you notice your config resetting to default, that probably means you've given it invalid mob names. Double check spelling, and ensure you that \"modname:mobname\" also works with the summon command!")
             .defineListAllowEmpty("climbingMobsAllowlist", List.of("minecraft:zombie", "minecraft:drowned", "minecraft:husk", "minecraft:zombie_villager"), Config::validateMobName);
@@ -32,15 +32,30 @@ public class Config
             .comment("/summon minecraft:zombie ~ ~ ~ {Tags: [\"canClimb\"]}")
             .define("climbingTag", "");
 
-    private static final ForgeConfigSpec.BooleanValue USE_ALLOWLIST_AS_BANLIST = BUILDER
-            .comment("\nUses the allowlist as a banlist, attempting to add climbing behavior to all mobs EXCEPT those listed in climbingMobsAllowlist.")
+    private static final ForgeConfigSpec.BooleanValue USE_CLIMB_ALLOWLIST_AS_BANLIST = BUILDER
+            .comment("\nUses the Climb allowlist as a banlist, attempting to add climbing behavior to all mobs EXCEPT those listed in climbingMobsAllowlist.")
             .define("useAllowlistAsBanlist", false);
+
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> FLOATING_MOBS = BUILDER
+            .comment("A list of mobs (hostile, passive, you name it) to give floating behavior.")
+            .defineListAllowEmpty("floatingMobsAllowlist", List.of("minecraft:zombie", "minecraft:husk", "minecraft:zombie_villager"), Config::validateMobName);
+
+    private static final ForgeConfigSpec.ConfigValue<String> FLOATING_TAG = BUILDER
+            .comment("\nNBTTag required for mob to use floating behavior.")
+            .define("floatingTag", "");
+
+    private static final ForgeConfigSpec.BooleanValue USE_FLOAT_ALLOWLIST_AS_BANLIST = BUILDER
+            .comment("\nUses the float allowlist as a banlist, attempting to add floating behavior to all mobs EXCEPT those listed in floatingMobsAllowlist.")
+            .define("useFloatAllowlistAsBanlist", false);
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static Set<EntityType> climbingMobsAllowlist;
     public static String climbingTag;
-    public static Boolean useAllowlistAsBanlist;
+    public static Boolean useClimbAllowlistAsBanlist;
+    public static Set<EntityType> floatingMobsAllowlist;
+    public static String floatingTag;
+    public static Boolean useFloatAllowlistAsBanlist;
 
     private static boolean validateMobName(final Object obj)
     {
@@ -54,6 +69,12 @@ public class Config
                 .map(mobName -> ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(mobName)))
                 .collect(Collectors.toSet());
         climbingTag = CLIMBING_TAG.get();
-        useAllowlistAsBanlist = USE_ALLOWLIST_AS_BANLIST.get();
+        useClimbAllowlistAsBanlist = USE_CLIMB_ALLOWLIST_AS_BANLIST.get();
+
+        floatingMobsAllowlist = FLOATING_MOBS.get().stream()
+                .map(mobName -> ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(mobName)))
+                .collect(Collectors.toSet());
+        floatingTag = FLOATING_TAG.get();
+        useFloatAllowlistAsBanlist = USE_FLOAT_ALLOWLIST_AS_BANLIST.get();
     }
 }

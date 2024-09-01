@@ -1,6 +1,7 @@
 package io.github.ferrinember.mobspiderclimb;
 
 import com.mojang.logging.LogUtils;
+import io.github.ferrinember.mobspiderclimb.util.SpawnEventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -25,6 +26,8 @@ public class MobSpiderClimb
     // Create a Deferred Register to hold Blocks which will all be registered under the "examplemod" namespace
     public MobSpiderClimb()
     {
+        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new SpawnEventHandler());
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
